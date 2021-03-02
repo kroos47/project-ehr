@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import Web3 from 'web3';
 import './App.css';
-import Meme from '../abis/Meme.json'
+//import Meme from '../abis/Meme.json'
+import Doc from '../abis/Doc.json'
+import Error from './Error';
+import Navigation from './Navigation';
+import Dock from './dock';
 
 const ipfsClient = require('ipfs-http-client')
 const ipfs = ipfsClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' }) // leaving out the arguments will default to these values
@@ -32,11 +37,11 @@ class App extends Component {
     const accounts = await web3.eth.getAccounts()
     this.setState({ account: accounts[0] })
     const networkId = await web3.eth.net.getId()
-    const networkData = Meme.networks[networkId]
+    const networkData = Doc.networks[networkId]
     if(networkData) {
-      const contract = web3.eth.Contract(Meme.abi, networkData.address)
+      const contract = web3.eth.Contract(Doc.abi, networkData.address)
       this.setState({ contract })
-      const memeHash = await contract.methods.get().call()
+      const memeHash = await contract.methods.getHash(0).call()
       this.setState({ memeHash })
     } else {
       window.alert('Smart contract not deployed to detected network.')
@@ -75,7 +80,7 @@ class App extends Component {
         console.error(error)
         return
       }
-       this.state.contract.methods.set(result[0].hash).send({ from: this.state.account }).then((r) => {
+       this.state.contract.methods.uploadFile(result[0].hash).send({ from: this.state.account }).then((r) => {
          return this.setState({ memeHash: result[0].hash })
        })
     })
@@ -83,30 +88,48 @@ class App extends Component {
 
   render() {
     return (
+      
+      
       <div>
+    <BrowserRouter>
+    
+  
+        
+       
+      
         <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
           <a
             className="navbar-brand col-sm-3 col-md-2 mr-0"
-            href="http://www.dappuniversity.com/bootcamp"
+            href=""
             target="_blank"
             rel="noopener noreferrer"
           >
-            Meme of the Day
+            Blockchain Consulting
           </a>
+          <a
+            className="navbar-brand col-sm-3 col-md-2 mr-0"
+            href="./dock.js"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            
+            
+          </a>
+   
         </nav>
+        
+     
+        <Switch>
+        <Route path="/dock" component={Dock}/>
+        <Route component={Error}/>
+        </Switch>
+       
         <div className="container-fluid mt-5">
           <div className="row">
             <main role="main" className="col-lg-12 d-flex text-center">
               <div className="content mr-auto ml-auto">
-                <a
-                  href="http://www.dappuniversity.com/bootcamp"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img src={`https://ipfs.infura.io/ipfs/${this.state.memeHash}`} />
-                </a>
                 <p>&nbsp;</p>
-                <h2>Change Meme</h2>
+                <h2>Upload document for consultation!</h2>
                 <form onSubmit={this.onSubmit} >
                   <input type='file' onChange={this.captureFile} />
                   <input type='submit' />
@@ -115,7 +138,9 @@ class App extends Component {
             </main>
           </div>
         </div>
+        </BrowserRouter>
       </div>
+      
     );
   }
 }
